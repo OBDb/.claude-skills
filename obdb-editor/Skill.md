@@ -276,6 +276,13 @@ Some PIDs return multiple values:
    - Apply model year filters
    - Validate all formulas
 
+5. **REFORMAT**
+   - **IMPORTANT**: When finished making changes to signalset files, always reformat them using:
+     ```bash
+     find signalsets/v3 -type f -exec python3 tests/schemas/cli.py '{}' --output '{}' \;
+     ```
+   - This ensures consistent formatting and validates against the schema
+
 ## Common Pitfalls to Avoid
 
 ❌ Converting temperatures to Fahrenheit

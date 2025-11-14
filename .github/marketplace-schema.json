@@ -9,14 +9,26 @@
       "description": "Marketplace identifier (kebab-case, no spaces)"
     },
     "owner": {
-      "type": ["string", "object"],
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Owner name"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Owner email"
+        }
+      },
       "description": "Marketplace maintainer information"
     },
     "plugins": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["name"],
+        "required": ["name", "source"],
         "properties": {
           "name": {
             "type": "string",
@@ -27,13 +39,9 @@
             "type": "string",
             "description": "Brief plugin description"
           },
-          "path": {
-            "type": "string",
-            "description": "Path to plugin directory"
-          },
           "source": {
-            "type": ["string", "object"],
-            "description": "Where to fetch the plugin from"
+            "type": "string",
+            "description": "Where to fetch the plugin from (local path or git repository)"
           },
           "version": {
             "type": "string",

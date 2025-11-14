@@ -6,34 +6,42 @@ on:
       - main
 
 jobs:
-  package-and-upload:
+  find-skills:
     runs-on: ubuntu-latest
+    outputs:
+      skills: ${{ steps.set-matrix.outputs.skills }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Find skill directories
+        id: set-matrix
+        run: |
+          # Find all directories containing Skill.md
+          skills=$(find . -maxdepth 2 -name "Skill.md" -type f | sed 's|/Skill.md||' | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')
+          echo "skills=$skills" >> $GITHUB_OUTPUT
+
+  package-and-upload:
+    needs: find-skills
+    if: needs.find-skills.outputs.skills != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        skill: ${{ fromJson(needs.find-skills.outputs.skills) }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Find and package skill folders
+      - name: Package skill
         run: |
-          # Create a directory for the zipped skills
-          mkdir -p packaged-skills
+          echo "Packaging skill: ${{ matrix.skill }}"
+          # Create zip file with contents at root (not the folder itself)
+          cd "${{ matrix.skill }}" && zip -r "../${{ matrix.skill }}.zip" .
 
-          # Find all directories containing Skill.md and zip them
-          for skill_dir in */; do
-            # Remove trailing slash
-            skill_dir=${skill_dir%/}
-
-            # Check if this directory contains a Skill.md file
-            if [ -f "$skill_dir/Skill.md" ]; then
-              echo "Packaging skill: $skill_dir"
-              # Create zip file with contents at root (not the folder itself)
-              (cd "$skill_dir" && zip -r "../packaged-skills/${skill_dir}.zip" .)
-            fi
-          done
-
-      - name: Upload skill packages as artifacts
+      - name: Upload skill artifact
         uses: actions/upload-artifact@v4
         with:
-          name: claude-skills
-          path: packaged-skills/*.zip
-          if-no-files-found: warn
+          name: ${{ matrix.skill }}
+          path: "${{ matrix.skill }}.zip"
+          if-no-files-found: error

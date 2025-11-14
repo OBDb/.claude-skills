@@ -41,7 +41,8 @@
           },
           "source": {
             "type": "string",
-            "description": "Where to fetch the plugin from (local path or git repository)"
+            "pattern": "^\\./",
+            "description": "Where to fetch the plugin from (must be a relative path starting with ./)"
           },
           "version": {
             "type": "string",

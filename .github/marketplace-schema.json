@@ -1,0 +1,128 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["name", "owner", "plugins"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Marketplace identifier (kebab-case, no spaces)"
+    },
+    "owner": {
+      "type": ["string", "object"],
+      "description": "Marketplace maintainer information"
+    },
+    "plugins": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$",
+            "description": "Plugin identifier (kebab-case, no spaces)"
+          },
+          "description": {
+            "type": "string",
+            "description": "Brief plugin description"
+          },
+          "path": {
+            "type": "string",
+            "description": "Path to plugin directory"
+          },
+          "source": {
+            "type": ["string", "object"],
+            "description": "Where to fetch the plugin from"
+          },
+          "version": {
+            "type": "string",
+            "description": "Plugin version"
+          },
+          "author": {
+            "type": ["string", "object"],
+            "description": "Plugin author information"
+          },
+          "homepage": {
+            "type": "string",
+            "format": "uri",
+            "description": "Plugin homepage or documentation URL"
+          },
+          "repository": {
+            "type": "string",
+            "description": "Source code repository URL"
+          },
+          "license": {
+            "type": "string",
+            "description": "SPDX license identifier"
+          },
+          "keywords": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Tags for discovery"
+          },
+          "category": {
+            "type": "string",
+            "description": "Plugin category for organization"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Tags for searchability"
+          },
+          "strict": {
+            "type": "boolean",
+            "default": true,
+            "description": "Require plugin.json in plugin folder"
+          },
+          "commands": {
+            "type": ["string", "array"],
+            "description": "Custom paths to command files or directories"
+          },
+          "agents": {
+            "type": ["string", "array"],
+            "description": "Custom paths to agent files"
+          },
+          "hooks": {
+            "type": ["string", "object"],
+            "description": "Custom hooks configuration or path to hooks file"
+          },
+          "mcpServers": {
+            "type": ["string", "object"],
+            "description": "MCP server configurations or path to MCP config"
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Brief marketplace description"
+        },
+        "version": {
+          "type": "string",
+          "description": "Marketplace version"
+        },
+        "pluginRoot": {
+          "type": "string",
+          "description": "Base path for relative plugin sources"
+        }
+      }
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief marketplace description (deprecated, use metadata.description)"
+    },
+    "version": {
+      "type": "string",
+      "description": "Marketplace version (deprecated, use metadata.version)"
+    }
+  },
+  "additionalProperties": false
+}

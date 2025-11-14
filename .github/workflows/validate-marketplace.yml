@@ -1,0 +1,23 @@
+name: Validate Marketplace
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  validate-marketplace:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate marketplace.json against schema
+        uses: dsanders11/json-schema-validate-action@v1.4.0
+        with:
+          files: '.claude-plugin/marketplace.json'
+          schema: '.github/marketplace-schema.json'

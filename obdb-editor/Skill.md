@@ -55,14 +55,33 @@ return Measurement(value: value, unit: unit)
 
 ### Basic Conversions
 
-| CSV Formula | Convert To | Explanation |
-|-------------|------------|-------------|
-| `A` | `{}` | Raw value, no conversion |
-| `A*0.5` | `{"div": 2}` | Multiply by 0.5 = divide by 2 |
-| `A*2` | `{"mul": 2}` | Direct multiplication |
-| `A*0.01` | `{"div": 100}` | 0.01 = 1/100 |
-| `A-40` | `{"add": -40}` | Subtract 40 |
-| `A*0.05+6` | `{"div": 20, "add": 6}` | Divide by 20, then add 6 |
+**Raw value (no conversion):**
+- CSV: `A`
+- ✅ JSON: `{}`
+
+**Multiply by 0.5:**
+- CSV: `A*0.5`
+- ✅ JSON: `{"div": 2}` (preferred)
+- ❌ JSON: `{"mul": 0.5}` (avoid - use div instead)
+
+**Multiply by 2:**
+- CSV: `A*2`
+- ✅ JSON: `{"mul": 2}`
+
+**Multiply by 0.01:**
+- CSV: `A*0.01`
+- ✅ JSON: `{"div": 100}` (preferred)
+- ❌ JSON: `{"mul": 0.01}` (avoid - use div instead)
+
+**Subtract 40:**
+- CSV: `A-40`
+- ✅ JSON: `{"add": -40}`
+
+**Complex formula (multiply by 0.05 then add 6):**
+- CSV: `A*0.05+6`
+- ✅ JSON: `{"div": 20, "add": 6}` (0.05 = 1/20, then add 6)
+
+See "Integer Division vs Floating-Point Multiplication" section below for detailed guidance.
 
 ### Data Type Conversions
 
@@ -290,6 +309,115 @@ Examples:
 
 ❌ 8-bit with `max: 300` and no scaling → INVALID (exceeds 255)
 
+## ⚠️ CRITICAL: Never Modify len/bix Without Reference Material
+
+**ABSOLUTE RULE**: Do NOT change `len` (bit length) or `bix` (bit index) values unless you have explicit reference material.
+
+### What This Means
+
+When reviewing or editing existing signals:
+- ✅ You MAY adjust `mul`, `div`, `add` to fix formula calculations
+- ✅ You MAY update `max`, `min` to match achievable ranges
+- ✅ You MAY change `unit`, `name`, `path` for clarity
+- ❌ You MUST NOT change `len` without a spec/CSV that shows the byte length
+- ❌ You MUST NOT change `bix` without a spec/CSV that shows the byte offset
+
+### Example of What NOT to Do
+
+**Existing signal:**
+```json
+{"id": "TAYCAN_BMS_MOD33_CELL1_SOC", "fmt": {"bix": 24, "len": 8, "max": 100, "unit": "percent"}}
+```
+
+**❌ WRONG** - Guessing that it should be 16-bit with higher precision:
+```json
+{"id": "TAYCAN_BMS_MOD33_CELL1_SOC", "fmt": {"bix": 24, "len": 16, "max": 100, "div": 10000, "unit": "percent"}}
+```
+
+**✅ CORRECT** - Leave len/bix unchanged, only adjust if needed:
+```json
+{"id": "TAYCAN_BMS_MOD33_CELL1_SOC", "fmt": {"bix": 24, "len": 8, "max": 100, "unit": "percent"}}
+```
+
+### Why This Matters
+
+The `len` and `bix` values determine:
+- Which bytes are read from the CAN bus response
+- How many bits are interpreted as the value
+- Where in the response packet to start reading
+
+**Changing these without evidence will cause:**
+- Reading the wrong bytes from the response
+- Corrupt or nonsensical data values
+- Silent failures that are hard to debug
+
+### When You CAN Change len/bix
+
+Only modify these values when you have:
+- A CSV file with explicit byte mappings (e.g., "Bytes A:B" or "INT16(A:B)")
+- Official technical documentation showing bit layout
+- Specification sheets with response packet structure
+- Direct confirmation from testing/reverse engineering documentation
+
+If you're tempted to change `len` or `bix` based on intuition or "this seems wrong," **DON'T**. Ask for clarification or reference material instead.
+
+## Integer Division vs Floating-Point Multiplication
+
+**IMPORTANT RULE**: Prefer integer `div` over floating-point `mul` when an obvious integer-based variation exists.
+
+### Why This Matters
+
+When there's a choice between floating-point multiplication and integer division, integer operations are:
+- More precise and predictable
+- Faster to compute
+- Easier to validate and test
+- Consistent across all platforms
+
+### Examples
+
+**❌ AVOID** - Using floating-point when integer division works:
+```json
+{"fmt": {"len": 8, "max": 100, "mul": 0.5, "unit": "percent"}}
+```
+
+**✅ PREFERRED** - Using integer division:
+```json
+{"fmt": {"len": 8, "max": 127.5, "div": 2, "unit": "percent"}}
+```
+
+### Conversion Reference
+
+When you see a decimal multiplier that has an obvious integer division equivalent, use the integer form:
+
+| Decimal Multiplier | Preferred Integer Division | Reasoning |
+|--------------------|---------------------------|-----------|
+| `× 0.5` | `"div": 2` | 0.5 = 1/2 |
+| `× 0.1` | `"div": 10` | 0.1 = 1/10 |
+| `× 0.01` | `"div": 100` | 0.01 = 1/100 |
+| `× 0.05` | `"div": 20` | 0.05 = 1/20 |
+| `× 0.25` | `"div": 4` | 0.25 = 1/4 |
+| `× 0.2` | `"div": 5` | 0.2 = 1/5 |
+
+### When Floating-Point mul IS Acceptable
+
+Floating-point `mul` is acceptable when there's no obvious integer equivalent or when specified in reference documentation:
+
+✅ `{"mul": 0.621371}` - Acceptable (km to miles conversion, no simple integer form)
+✅ `{"mul": 1.8, "add": 32}` - Acceptable if explicitly documented this way
+
+### Integer mul Is Always Fine
+
+You can freely use `mul` when the multiplier is an integer:
+
+✅ `{"mul": 2}` - Good
+✅ `{"mul": 10}` - Good
+✅ `{"mul": 50}` - Good
+
+For complex multipliers like `× 1.5`, prefer combined operations:
+```json
+{"mul": 3, "div": 2}  // Equivalent to × 1.5, preferred over {"mul": 1.5}
+```
+
 ## Multi-Signal Commands
 
 Some PIDs return multiple values:
@@ -355,6 +483,7 @@ Some PIDs return multiple values:
 ❌ **Not using the vehicle's existing ID prefix** (e.g., using `Porsche_19_GATE__` instead of `TAYCAN_`)
 ❌ **Creating overly verbose signal IDs** instead of using standard abbreviations
 ❌ **CRITICAL: Modifying `len` or `bix` values without reference material** - NEVER change these unless you have a CSV, spec sheet, or other source document that explicitly justifies the change
+❌ **Using floating-point `mul` when integer `div` exists** - Prefer `{"div": 2}` over `{"mul": 0.5}`
 
 ## Example Conversion
 

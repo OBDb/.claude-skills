@@ -9,7 +9,7 @@
     {
       "name": "obdb-editor",
       "description": "Add and manage OBD-II extended PIDs in OBDb vehicle signalset JSON files by converting CSV formulas to proper mul/div/add format",
-      "source": "obdb-editor"
+      "source": "./obdb-editor"
     }
   ]
 }

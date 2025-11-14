@@ -8,7 +8,26 @@ A collection of custom skills for Claude Code.
 
 ## Installing Skills
 
-### Option 1: Via Marketplace (Recommended)
+### Option 1: Direct Download (Recommended)
+
+Each skill is available as a pre-packaged zip file with a stable URL:
+
+**obdb-editor:**
+```
+https://github.com/OBDb/.claude-skills/releases/download/latest/obdb-editor.zip
+```
+
+To install:
+1. Download the skill zip file from the URL above
+2. In Claude Code, go to settings or use the command palette
+3. Upload the downloaded zip file
+
+Or use `curl` to download:
+```bash
+curl -L -O https://github.com/OBDb/.claude-skills/releases/download/latest/obdb-editor.zip
+```
+
+### Option 2: Via Marketplace
 
 1. In Claude Code, run:
    ```
@@ -21,16 +40,13 @@ A collection of custom skills for Claude Code.
    ```
    Then select the skills from the marketplace to install.
 
-### Option 2: Download from GitHub Actions
+### Option 3: Download from Releases Page
 
-1. Go to the [Actions tab](../../actions/workflows/package-skills.yml) in this repository
-2. Click on the most recent successful workflow run
-3. Scroll down to the **Artifacts** section
-4. Download the skill you want (each skill is packaged as a separate zip file)
-5. Go to [claude.ai/settings/capabilities](https://claude.ai/settings/capabilities)
-6. Click **Add Skill** and upload the downloaded zip file
+1. Go to the [Releases page](../../releases/latest)
+2. Download the skill zip file you want
+3. In Claude Code, upload the downloaded zip file
 
-### Option 3: Manual Installation
+### Option 4: Manual Installation
 
 1. Clone this repository:
    ```bash

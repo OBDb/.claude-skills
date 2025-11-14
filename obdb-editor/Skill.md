@@ -354,6 +354,7 @@ Some PIDs return multiple values:
 ❌ Setting max values that exceed formula output
 ❌ **Not using the vehicle's existing ID prefix** (e.g., using `Porsche_19_GATE__` instead of `TAYCAN_`)
 ❌ **Creating overly verbose signal IDs** instead of using standard abbreviations
+❌ **CRITICAL: Modifying `len` or `bix` values without reference material** - NEVER change these unless you have a CSV, spec sheet, or other source document that explicitly justifies the change
 
 ## Example Conversion
 

@@ -1,0 +1,12 @@
+{
+  "name": "OBDb Claude Skills",
+  "description": "A collection of OBDb skills for Claude Code",
+  "version": "1.0.0",
+  "skills": [
+    {
+      "name": "obdb-editor",
+      "description": "Add and manage OBD-II extended PIDs in OBDb vehicle signalset JSON files by converting CSV formulas to proper mul/div/add format",
+      "path": "obdb-editor"
+    }
+  ]
+}

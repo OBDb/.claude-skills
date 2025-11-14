@@ -214,17 +214,31 @@ Examples:
 
 ## Valid Categories (path)
 
-Use these standard paths:
-- `"Battery"` - HV battery, 12V battery, SOC
+**IMPORTANT**: Use the most specific path category. Only use `"ECU"` as a last resort when no other category fits.
+
+Standard paths (in order of preference):
+- `"Battery"` - HV battery, 12V battery, SOC, DC-DC converter voltage/current
 - `"Drivetrain"` - Motors, torque, speed, inverters
 - `"Transmission"` - Gear position, temperature
 - `"Climate"` - HVAC, temperatures, A/C
 - `"Tires"` - Tire pressures
-- `"Trips"` - Odometer
+- `"Trips"` - Odometer, range estimates
 - `"Movement"` - Vehicle speed
 - `"Engine"` - Throttle, grill shutter
-- `"ECU"` - ECU monitoring
-- `"Electrical"` - DC-DC converter
+- `"Electrical"` - General electrical systems
+- `"ECU"` - **LAST RESORT** - Only for ECU-specific monitoring when no other category applies
+
+### Path Selection Examples
+
+**DC-DC Converter signals:**
+- ✅ `"Battery"` - DC-DC converter voltage/current (relates to battery charging)
+- ❌ `"ECU"` - Too generic
+- ❌ `"Electrical"` - Less specific than Battery
+
+**Range/Energy signals:**
+- ✅ `"Trips"` - Range estimates, energy consumption
+- ✅ `"Battery"` - Battery energy content
+- ❌ `"ECU"` - Too generic
 
 ## Valid Units
 
@@ -484,6 +498,7 @@ Some PIDs return multiple values:
 ❌ **Creating overly verbose signal IDs** instead of using standard abbreviations
 ❌ **CRITICAL: Modifying `len` or `bix` values without reference material** - NEVER change these unless you have a CSV, spec sheet, or other source document that explicitly justifies the change
 ❌ **Using floating-point `mul` when integer `div` exists** - Prefer `{"div": 2}` over `{"mul": 0.5}`
+❌ **Using `"ECU"` path when a more specific category exists** - DC-DC converter signals belong in `"Battery"`, not `"ECU"`
 
 ## Example Conversion
 

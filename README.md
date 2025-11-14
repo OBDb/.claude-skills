@@ -8,7 +8,20 @@ A collection of custom skills for Claude Code.
 
 ## Installing Skills
 
-### Option 1: Download from GitHub Actions (Recommended)
+### Option 1: Via Marketplace (Recommended)
+
+1. In Claude Code, run:
+   ```
+   /plugin marketplace add https://github.com/OBDb/.claude-skills
+   ```
+
+2. Install the skills you want:
+   ```
+   /plugin
+   ```
+   Then select the skills from the marketplace to install.
+
+### Option 2: Download from GitHub Actions
 
 1. Go to the [Actions tab](../../actions/workflows/package-skills.yml) in this repository
 2. Click on the most recent successful workflow run
@@ -17,7 +30,7 @@ A collection of custom skills for Claude Code.
 5. Go to [claude.ai/settings/capabilities](https://claude.ai/settings/capabilities)
 6. Click **Add Skill** and upload the downloaded zip file
 
-### Option 2: Manual Installation
+### Option 3: Manual Installation
 
 1. Clone this repository:
    ```bash

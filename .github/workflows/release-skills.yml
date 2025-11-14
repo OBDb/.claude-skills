@@ -1,0 +1,113 @@
+name: Release Skills
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '*/Skill.md'
+      - '*/**'
+
+jobs:
+  find-skills:
+    runs-on: ubuntu-latest
+    outputs:
+      skills: ${{ steps.set-matrix.outputs.skills }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Find skill directories
+        id: set-matrix
+        run: |
+          # Find all directories containing Skill.md
+          skills=$(find . -maxdepth 2 -name "Skill.md" -type f | sed 's|/Skill.md||' | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')
+          echo "skills=$skills" >> $GITHUB_OUTPUT
+
+  package-skills:
+    needs: find-skills
+    if: needs.find-skills.outputs.skills != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        skill: ${{ fromJson(needs.find-skills.outputs.skills) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Package skill
+        run: |
+          echo "Packaging skill: ${{ matrix.skill }}"
+          # Create zip file with contents at root (not the folder itself)
+          cd "${{ matrix.skill }}" && zip -r "../${{ matrix.skill }}.zip" .
+
+      - name: Upload packaged skill
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.skill }}
+          path: "${{ matrix.skill }}.zip"
+
+  create-release:
+    needs: [find-skills, package-skills]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: skills
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-assets
+          # Move all zip files to release-assets directory
+          find skills -name "*.zip" -exec mv {} release-assets/ \;
+          ls -la release-assets/
+
+      - name: Delete existing latest release
+        continue-on-error: true
+        run: |
+          gh release delete latest --yes --cleanup-tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Create or update latest release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Latest Skills
+          body: |
+            ## Claude Code Skills - Latest Release
+
+            This release contains the latest versions of all skills in this repository.
+            Each skill is packaged as a separate zip file ready for installation.
+
+            ### Installation
+
+            Download the skill zip file you want and install it in Claude Code:
+
+            1. Download the `.zip` file for the skill you want
+            2. In Claude Code, go to settings or use the command palette
+            3. Upload the downloaded zip file
+
+            ### Available Skills
+
+            ${{ needs.find-skills.outputs.skills }}
+
+            ---
+
+            **Direct Download URLs:**
+            Each skill can be downloaded directly from:
+            `https://github.com/${{ github.repository }}/releases/download/latest/<skill-name>.zip`
+
+            For example:
+            - `https://github.com/${{ github.repository }}/releases/download/latest/obdb-editor.zip`
+          files: release-assets/*.zip
+          draft: false
+          prerelease: false

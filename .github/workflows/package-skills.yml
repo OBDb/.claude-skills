@@ -1,0 +1,39 @@
+name: Package Skills
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  package-and-upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Find and package skill folders
+        run: |
+          # Create a directory for the zipped skills
+          mkdir -p packaged-skills
+
+          # Find all directories containing Skill.md and zip them
+          for skill_dir in */; do
+            # Remove trailing slash
+            skill_dir=${skill_dir%/}
+
+            # Check if this directory contains a Skill.md file
+            if [ -f "$skill_dir/Skill.md" ]; then
+              echo "Packaging skill: $skill_dir"
+              # Create zip file with contents at root (not the folder itself)
+              (cd "$skill_dir" && zip -r "../packaged-skills/${skill_dir}.zip" .)
+            fi
+          done
+
+      - name: Upload skill packages as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: claude-skills
+          path: packaged-skills/*.zip
+          if-no-files-found: warn

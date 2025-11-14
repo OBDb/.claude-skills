@@ -1,0 +1,51 @@
+name: Validate Skills
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate-frontmatter:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get all Skill.md files
+        id: skill-files
+        run: |
+          # Find all Skill.md files and format as comma-separated list
+          files=$(find . -name "Skill.md" -type f | tr '\n' ',')
+          # Remove trailing comma
+          files=${files%,}
+          echo "files=$files" >> $GITHUB_OUTPUT
+
+      - name: Validate frontmatter schema
+        if: steps.skill-files.outputs.files != ''
+        uses: hashicorp/front-matter-schema@main
+        with:
+          files: ${{ steps.skill-files.outputs.files }}
+          directories: |
+            .
+          schema: |
+            {
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "required": true
+                },
+                "description": {
+                  "type": "string",
+                  "required": true
+                },
+                "license": {
+                  "type": "string",
+                  "required": false
+                }
+              },
+              "additionalProperties": false
+            }

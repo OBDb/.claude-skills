@@ -177,6 +177,80 @@ Examples:
 - `TAYCAN_HVBAT_T_AVG` (vehicle_component_measurement_qualifier)
 - `TAYCAN_RANGE_EST_INT` (vehicle_metric_qualifier_qualifier)
 
+## Signal Naming Conventions
+
+**CRITICAL**: Signal names must be clear, concise, and follow a consistent pattern.
+
+### Name Structure Pattern
+
+Define the **noun first**, then any **modifiers**:
+
+```
+{Primary noun}, {modifier}
+```
+
+### Formatting Rules
+
+1. **Use sentence casing** (capitalize first word only)
+2. **No punctuation at the end**
+3. **No parentheticals** - use commas for modifiers instead
+4. **No bracketed prefixes** like `[19.gate]` or `[BCM]`
+5. **No module/ECU identifiers** in the name
+6. **Define the primary subject first**, then qualifiers
+
+### Examples of Good vs Bad Names
+
+❌ **Bad**: `[19.gate] estimated electric power reserve (internal value)`
+✅ **Good**: `Electric power reserve, estimated` (with `path: "Battery.Internal"`)
+
+❌ **Bad**: `[BCM] Maximum energy content of the traction battery`
+✅ **Good**: `Battery energy, maximum` (with `path: "Battery"`)
+
+❌ **Bad**: `DC-DC converter low voltage (output)`
+✅ **Good**: `DC-DC voltage, low` (with `path: "Battery"` for DC-DC converter signals)
+
+❌ **Bad**: `Average temperature of HV battery modules`
+✅ **Good**: `Battery temperature, average` (with `path: "Battery"`)
+
+❌ **Bad**: `Internal estimated range value`
+✅ **Good**: `Range, estimated` (with `path: "Trips.Internal"`)
+
+### Handling "Internal" Parameters
+
+If a parameter is referenced as "internal" in the source material:
+- ✅ **Add `.Internal` to the path** (e.g., `"path": "Battery.Internal"`)
+- ❌ **Don't include "internal" in the name** unless it's a critical distinguishing modifier
+
+**Example:**
+```json
+{
+  "id": "TAYCAN_PWR_RSV_EST",
+  "path": "Battery.Internal",
+  "name": "Power reserve, estimated",
+  "fmt": {"len": 16, "div": 100, "unit": "kilowatts"}
+}
+```
+
+### Common Name Patterns
+
+**DC-DC Converter Signals** (path: `Battery`):
+- `DC-DC voltage, low`
+- `DC-DC voltage, high`
+- `DC-DC current`
+
+**Battery Signals** (path: `Battery`):
+- `Battery temperature, maximum`
+- `Battery temperature, minimum`
+- `Battery temperature, average`
+- `Battery power, available`
+- `Battery energy, remaining`
+- `Battery current, charging`
+- `Battery voltage`
+
+**Range/Trip Signals** (path: `Trips`):
+- `Range, estimated`
+- `Energy consumption, average`
+
 ## Signal Format Structure
 
 ```json
@@ -193,7 +267,7 @@ Examples:
     {
       "id": "SIGNAL_ID",        // Unique identifier - REQUIRED (use vehicle prefix!)
       "path": "Battery",         // Category - OPTIONAL but recommended
-      "name": "Human name",      // Display name - REQUIRED
+      "name": "Human name",      // Display name - REQUIRED (follow naming conventions!)
       "description": "Details",  // Long description - OPTIONAL
       "suggestedMetric": "stateOfCharge",  // UI mapping - OPTIONAL
       "fmt": {                   // Format specification - REQUIRED
@@ -449,6 +523,93 @@ Some PIDs return multiple values:
 }
 ```
 
+## DIN/DOUT Value Mapping
+
+**CRITICAL**: When mapping signals to DIN/DOUT (diagnostic level in, diagnostic level out) format, follow these exact rules:
+
+### DIN/DOUT Format Requirements
+
+1. **Source material DIN/DOUT values always have a `10` prefix** (e.g., `1003`, `10FF`, `1012`)
+2. **JSON `"din"` or `"dout"` field must contain ONLY the last two hex characters** (without the `10` prefix)
+3. **DIN/DOUT value must always be a two-character hex string**
+4. **Same rules apply to both `din` and `dout` fields**
+5. **CRITICAL: A `dout` field must NEVER exist without a corresponding `din` field** (but a `din` may exist without a `dout`)
+
+### DIN/DOUT Mapping Examples
+
+✅ **Correct mappings:**
+```json
+// Source: 1003
+{"din": "03"}
+
+// Source: 10FF
+{"din": "FF"}
+
+// Source: 1012
+{"dout": "12"}
+
+// Source: 10A5
+{"dout": "A5"}
+```
+
+❌ **Incorrect mappings:**
+```json
+// Wrong - includes the 10 prefix
+{"din": "1003"}
+
+// Wrong - single character (missing leading zero)
+{"din": "3"}
+
+// Wrong - not hex format
+{"din": 3}
+
+// Wrong - includes the 10 prefix
+{"dout": "1012"}
+```
+
+### Full Signal Examples with DIN/DOUT
+
+```json
+{
+  "hdr": "7E4",
+  "cmd": {"22": "4808"},
+  "signals": [
+    {
+      "id": "TAYCAN_HVBAT_SOC",
+      "path": "Battery",
+      "name": "HV battery state of charge",
+      "din": "03",
+      "fmt": {
+        "len": 8,
+        "max": 100,
+        "unit": "percent"
+      }
+    },
+    {
+      "id": "TAYCAN_HVBAT_V",
+      "path": "Battery",
+      "name": "HV battery voltage",
+      "din": "12",
+      "dout": "15",
+      "fmt": {
+        "len": 16,
+        "max": 655.35,
+        "div": 100,
+        "unit": "volts"
+      }
+    }
+  ]
+}
+```
+
+**Note**: The second signal shows both `din` and `dout` - this is valid. The first signal shows only `din` - this is also valid. However, a signal with only `dout` (no `din`) would be invalid.
+
+**Important**: When converting CSV data with DIN/DOUT identifiers:
+1. Verify the source DIN/DOUT starts with `10`
+2. Extract only the last two hex characters
+3. Ensure they are uppercase (e.g., `"FF"` not `"ff"`)
+4. Always use quotes to make it a string (not a number)
+
 ## Implementation Workflow
 
 **When asked to add OBD parameters:**
@@ -496,9 +657,15 @@ Some PIDs return multiple values:
 ❌ Setting max values that exceed formula output
 ❌ **Not using the vehicle's existing ID prefix** (e.g., using `Porsche_19_GATE__` instead of `TAYCAN_`)
 ❌ **Creating overly verbose signal IDs** instead of using standard abbreviations
+❌ **Including bracketed prefixes in names** like `[19.gate]` or `[BCM]` - remove these entirely
+❌ **Using parentheticals in names** like `(internal value)` - use path modifiers like `.Internal` instead
+❌ **Not following noun-first naming** - Always define the primary noun first, then modifiers
+❌ **Using Title Case or all lowercase** - Always use sentence casing for signal names
 ❌ **CRITICAL: Modifying `len` or `bix` values without reference material** - NEVER change these unless you have a CSV, spec sheet, or other source document that explicitly justifies the change
 ❌ **Using floating-point `mul` when integer `div` exists** - Prefer `{"div": 2}` over `{"mul": 0.5}`
 ❌ **Using `"ECU"` path when a more specific category exists** - DC-DC converter signals belong in `"Battery"`, not `"ECU"`
+❌ **Incorrect DIN/DOUT formatting** - Must be two-character hex string without the `10` prefix (e.g., `"din": "03"` not `"din": "1003"` or `"din": "3"`, same for `dout`)
+❌ **Adding `dout` without `din`** - A `dout` field must NEVER exist without a corresponding `din` field
 
 ## Example Conversion
 

@@ -100,6 +100,64 @@ For `(value * 1/5) / 10`:
 1. Simplify: `value / 50`
 2. Convert to: `{"div": 50}`
 
+## Signal ID Naming Conventions
+
+**CRITICAL**: Always follow the existing vehicle's ID prefix pattern and use abbreviations.
+
+### Step 1: Identify the Vehicle Prefix
+Before adding new parameters, examine existing signal IDs in the file to determine the vehicle's prefix:
+- `TAYCAN_*` for Porsche Taycan
+- `MACHE_*` for Ford Mustang Mach-E
+- `IONIQ5_*` for Hyundai Ioniq 5
+- etc.
+
+### Step 2: Create Abbreviated IDs
+Use common abbreviations to keep IDs concise while maintaining clarity:
+
+| Full Term | Abbreviation | Example Usage |
+|-----------|--------------|---------------|
+| DC-DC Converter | `DCDC` | `TAYCAN_DCDC_V_LOW` |
+| Voltage | `V` | `TAYCAN_HVBAT_V` |
+| Current | `I` | `TAYCAN_HVBAT_I` |
+| Temperature | `T` | `TAYCAN_HVBAT_T_AVG` |
+| Battery | `BAT` or `HVBAT` | `TAYCAN_HVBAT_SOC` |
+| High Voltage | `HV` | `TAYCAN_HV_DCDC_T` |
+| Low Voltage | `LV` | `TAYCAN_LV_BAT_V` |
+| State of Charge | `SOC` | `TAYCAN_HVBAT_SOC` |
+| Maximum | `MAX` | `TAYCAN_HVBAT_T_MAX` |
+| Minimum | `MIN` | `TAYCAN_HVBAT_T_MIN` |
+| Average | `AVG` | `TAYCAN_HVBAT_T_AVG` |
+| Power | `PWR` | `TAYCAN_HVBAT_PWR` |
+| Energy | `E` | `TAYCAN_HVBAT_E_MAX` |
+| Reserve/Remaining | `REM` or `RSV` | `TAYCAN_E_REM` |
+| Estimated | `EST` | `TAYCAN_RANGE_EST` |
+| Internal | `INT` | `TAYCAN_RANGE_INT` |
+
+### Examples of Good vs Bad IDs
+
+❌ **Bad**: `Porsche_19_GATE__DC_DC_CONVERTER_LOW_VOLTAGE`
+✅ **Good**: `TAYCAN_DCDC_V_LOW`
+
+❌ **Bad**: `Porsche_19_GATE__MAXIMUM_ENERGY_CONTENT_OF_THE_TRACTION_BATTERY`
+✅ **Good**: `TAYCAN_HVBAT_E_MAX`
+
+❌ **Bad**: `Porsche_19_GATE__ESTIMATED_ELECTRIC_POWER_RESERVE__INTERNAL_VALUE_`
+✅ **Good**: `TAYCAN_RANGE_EST_INT`
+
+❌ **Bad**: `Porsche_19_GATE__DC_DC_CONVERTER_CURRENT`
+✅ **Good**: `TAYCAN_DCDC_I`
+
+### ID Structure Pattern
+```
+{VEHICLE_PREFIX}_{COMPONENT}_{MEASUREMENT}_{QUALIFIER}
+```
+
+Examples:
+- `TAYCAN_HVBAT_SOC` (vehicle_component_measurement)
+- `TAYCAN_DCDC_V_LOW` (vehicle_component_measurement_qualifier)
+- `TAYCAN_HVBAT_T_AVG` (vehicle_component_measurement_qualifier)
+- `TAYCAN_RANGE_EST_INT` (vehicle_metric_qualifier_qualifier)
+
 ## Signal Format Structure
 
 ```json
@@ -114,7 +172,7 @@ For `(value * 1/5) / 10`:
   },
   "signals": [            // Array of signals - REQUIRED
     {
-      "id": "SIGNAL_ID",        // Unique identifier - REQUIRED
+      "id": "SIGNAL_ID",        // Unique identifier - REQUIRED (use vehicle prefix!)
       "path": "Battery",         // Category - OPTIONAL but recommended
       "name": "Human name",      // Display name - REQUIRED
       "description": "Details",  // Long description - OPTIONAL
@@ -255,6 +313,7 @@ Some PIDs return multiple values:
 
 1. **ANALYZE**
    - Read CSV files and existing signalset
+   - **Identify the vehicle's ID prefix** (e.g., `TAYCAN_`, `MACHE_`, `IONIQ5_`)
    - Identify missing PIDs
    - Group parameters by system
 
@@ -262,6 +321,7 @@ Some PIDs return multiple values:
    - Apply formula conversion rules
    - Calculate correct max values
    - Assign proper headers and units
+   - **Create abbreviated signal IDs** following the vehicle's prefix pattern
 
 3. **ORGANIZE**
    - Phase 1: Core telemetry (battery, motor)
@@ -272,7 +332,7 @@ Some PIDs return multiple values:
    - Phase 6: Status/lookup parameters
 
 4. **ADD**
-   - Create command entries
+   - Create command entries with properly abbreviated IDs
    - Apply model year filters
    - Validate all formulas
 
@@ -292,6 +352,8 @@ Some PIDs return multiple values:
 ❌ Guessing at formulas instead of following rules
 ❌ Using invalid path categories
 ❌ Setting max values that exceed formula output
+❌ **Not using the vehicle's existing ID prefix** (e.g., using `Porsche_19_GATE__` instead of `TAYCAN_`)
+❌ **Creating overly verbose signal IDs** instead of using standard abbreviations
 
 ## Example Conversion
 

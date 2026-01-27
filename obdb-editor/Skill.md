@@ -151,6 +151,42 @@ Use common abbreviations to keep IDs concise while maintaining clarity:
 | Reserve/Remaining | `REM` or `RSV` | `TAYCAN_E_REM` |
 | Estimated | `EST` | `TAYCAN_RANGE_EST` |
 | Internal | `INT` | `TAYCAN_RANGE_INT` |
+| Front Left | `FL` | `TAYCAN_FL_VSS` |
+| Front Right | `FR` | `TAYCAN_FR_VSS` |
+| Rear Left | `RL` | `TAYCAN_RL_VSS` |
+| Rear Right | `RR` | `TAYCAN_RR_VSS` |
+| Vehicle Speed Sensor / Wheel Speed | `VSS` | `TAYCAN_FL_VSS` |
+| Pressure | `P` | `TAYCAN_BRAKE_P` |
+| Speed | `SPD` | `TAYCAN_ENGINE_SPD` |
+| Odometer | `ODO` | `TAYCAN_ODO` |
+| Accelerator Pedal | `ACCEL` | `TAYCAN_ACCEL_POS` |
+| Differential | `DIFF` | `TAYCAN_DIFF_LOCK` |
+| Calibration | `CAL` | `TAYCAN_INJ_CAL` |
+| Position | `POS` | `TAYCAN_GEAR_POS` |
+| Cylinder | `CYL` | `TAYCAN_CYL1_T` |
+| Injection | `INJ` | `TAYCAN_INJ_QTY` |
+| Regeneration | `REGEN` | `TAYCAN_DPF_REGEN` |
+| Quantity | `QTY` | `TAYCAN_FUEL_QTY` |
+| Commanded | `CMD` | `TAYCAN_BOOST_P_CMD` |
+| Actual | `ACT` | `TAYCAN_BOOST_P_ACT` |
+| Adaptation | `ADAPT` | `TAYCAN_CLUTCH_ADAPT` |
+
+### Wheel Speed Signal IDs
+
+**CRITICAL**: Always use the abbreviated format for wheel speed signals:
+
+| Full Name | Correct ID | Wrong ID |
+|-----------|------------|----------|
+| Front Left Wheel Speed | `{PREFIX}_FL_VSS` | `{PREFIX}_FRONT_LEFT_WHEEL_SPEED` |
+| Front Right Wheel Speed | `{PREFIX}_FR_VSS` | `{PREFIX}_FRONT_RIGHT_WHEEL_SPEED` |
+| Rear Left Wheel Speed | `{PREFIX}_RL_VSS` | `{PREFIX}_REAR_LEFT_WHEEL_SPEED` |
+| Rear Right Wheel Speed | `{PREFIX}_RR_VSS` | `{PREFIX}_REAR_RIGHT_WHEEL_SPEED` |
+
+Example:
+```json
+{"id": "Q3_PQ35_FL_VSS", "name": "FL wheel spd", ...}
+{"id": "Q3_PQ35_FR_VSS", "name": "FR wheel spd", ...}
+```
 
 ### Examples of Good vs Bad IDs
 
